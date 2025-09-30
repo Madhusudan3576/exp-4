@@ -1,0 +1,70 @@
+#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+using namespace std;
+
+class TicketSystem {
+private:
+    int tickets;
+    mutex mtx;
+
+public:
+    TicketSystem(int total) : tickets(total) {}
+
+    void showAvailable() {
+        lock_guard<mutex> lock(mtx);
+        cout << "🎟 Available Tickets: " << tickets << endl;
+    }
+
+    bool bookTicket(string username) {
+        lock_guard<mutex> lock(mtx);
+        if (tickets > 0) {
+            cout << "✅ " << username << " booked ticket #" << tickets << endl;
+            tickets--;
+            return true;
+        } else {
+            cout << "❌ Sorry " << username << ", tickets are sold out!" << endl;
+            return false;
+        }
+    }
+};
+
+void menu(TicketSystem &system, string username) {
+    int choice;
+    do {
+        cout << "\n====== Ticket Management Menu (" << username << ") ======";
+        cout << "\n1. Show Available Tickets";
+        cout << "\n2. Book Ticket";
+        cout << "\n3. Exit";
+        cout << "\nEnter choice: ";
+        cin >> choice;
+
+        switch(choice) {
+            case 1:
+                system.showAvailable();
+                break;
+            case 2:
+                system.bookTicket(username);
+                break;
+            case 3:
+                cout << "👋 Goodbye " << username << "!\n";
+                break;
+            default:
+                cout << "⚠ Invalid choice, try again!\n";
+        }
+    } while(choice != 3);
+}
+
+int main() {
+    TicketSystem system(10); // start with 10 tickets
+
+    cout << "==== Concurrent Ticket CLI System ====\n";
+    cout << "Enter your name: ";
+    string username;
+    cin >> username;
+
+    menu(system, username);
+
+    return 0;
+}
