@@ -1,0 +1,30 @@
+#include "crow_all.h"
+#include <mutex>
+
+int tickets = 10;       // total tickets
+std::mutex mtx;         // lock for concurrency
+
+int main() {
+    crow::SimpleApp app;
+
+    // Endpoint: check available tickets
+    CROW_ROUTE(app, "/tickets")
+    ([](){
+        std::lock_guard<std::mutex> lock(mtx);
+        return crow::response(200, "Available Tickets: " + std::to_string(tickets));
+    });
+
+    // Endpoint: book ticket
+    CROW_ROUTE(app, "/book").methods("POST"_method)
+    ([](){
+        std::lock_guard<std::mutex> lock(mtx);
+        if (tickets > 0) {
+            int booked = tickets--;
+            return crow::response(200, "Ticket booked! Remaining: " + std::to_string(tickets));
+        } else {
+            return crow::response(400, "No tickets available!");
+        }
+    });
+
+    app.port(5000).multithreaded().run();
+}
