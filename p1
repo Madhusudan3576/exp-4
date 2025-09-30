@@ -1,0 +1,41 @@
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <vector>
+#include <chrono>
+
+int tickets = 10;        // Total tickets
+std::mutex mtx;          // Mutex lock for concurrency
+
+void bookTicket(int id) {
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // simulate delay
+        std::lock_guard<std::mutex> lock(mtx); // lock critical section
+
+        if (tickets > 0) {
+            std::cout << "User " << id << " booked ticket #" << tickets << std::endl;
+            tickets--;
+        } else {
+            std::cout << "User " << id << " could not book (Sold Out)" << std::endl;
+            break;
+        }
+    }
+}
+
+int main() {
+    const int users = 5;
+    std::vector<std::thread> threads;
+
+    // Create multiple user threads
+    for (int i = 1; i <= users; i++) {
+        threads.push_back(std::thread(bookTicket, i));
+    }
+
+    // Join threads
+    for (auto &t : threads) {
+        t.join();
+    }
+
+    std::cout << "All tickets booked. Remaining: " << tickets << std::endl;
+    return 0;
+}
